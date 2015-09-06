@@ -1,22 +1,21 @@
 import re
 from getpass import getpass
 from passlib.hash import sha256_crypt
+import user
+from user import checkUserExists
 
-class Login():
+class Login:
     def __init__(self):
-        self.config = {}
-        with open("config", "r") as fd:
-            for line in fd:
-                line = line.strip('\n')
-                (option, value) = line.split(':', 1)
-                self.config[option] = value 
+        pass
 
     def getUser(self):
         for tryLogin in range(0, int(self.config['tryLogin'])):
             username = raw_input(self.config['loginPrompt'])
             username = username.strip('\n')
             username = re.sub(r'[^A-Za-z0-9_.-]', '', username)
-            if self.checkUser(username):
+            if username == "new":
+                return username
+            if self.checkPasswd(username):
                 print self.config['welcomeUsername']
                 return username 
             else:
@@ -24,23 +23,16 @@ class Login():
         print self.config['tooManyLoginTry']
         return False
 
-    def checkUser(self, username):
-        passwdFile = {}   
-        enteredPw = getpass(self.config['passwdPrompt'])     
+    def checkPasswd(self, username):
+        passwdFile = {}
+        enteredPw = getpass(self.config['passwdPrompt'])
         with open("passwd", "r") as fd:
             for line in fd:
+                line = line.strip('\n')
                 (user, passwd) = line.split(':')
                 passwdFile[user] = passwd
-        if username in passwdFile.keys() and self.checkPasswd(passwdFile[username], enteredPw):
+        if checkUserExists(username) and sha256_crypt.verify(enteredPw, passwdFile[username]):
             return True
         else:
             return False
- 
-    def checkPasswd(self, passwd, enteredPw):
-        passwd = passwd.strip('\n')
-        if sha256_crypt.verify(enteredPw, passwd):
-            return True
-        else:
-            return False
-
 
